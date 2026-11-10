@@ -200,10 +200,10 @@
         <div class="items" id="items"></div>
         <aside class="slip" aria-live="polite">
           <h3>Your order</h3>
-          <p class="sub">Show this slip at the counter.</p>
+          <p class="sub">Tap Order on WhatsApp to send it to us.</p>
           <ul class="lines" id="lines"></ul>
           <div class="total"><span>Total</span><span id="total">₹0</span></div>
-          <button class="btn" id="copy" type="button">Copy order</button>
+          <a class="btn" id="order" href="https://wa.me/918762424335" target="_blank" rel="noopener">Order on WhatsApp</a>
           <p class="note" id="note"></p>
         </aside>
       </div>
@@ -307,16 +307,29 @@
       ul.appendChild(li);
     });
     document.getElementById("total").textContent = rupee(total());
+    if (orderBtn) { updateOrder(); }
+    document.getElementById("note").textContent = "";
   }
 
-  document.getElementById("copy").addEventListener("click", function () {
+  var orderBtn = document.getElementById("order");
+  function orderText() {
+    var lines = MENU.filter(function (m) { return cart[m.id]; }).map(function (m) {
+      return cart[m.id] + " x " + m.name + " - " + rupee(m.price * cart[m.id]);
+    });
+    return "Hi Patty Lane, I would like to order:\n" + lines.join("\n") + "\nTotal: " + rupee(total());
+  }
+  function updateOrder() {
+    orderBtn.href = "https://wa.me/918762424335?text=" + encodeURIComponent(orderText());
+  }
+  orderBtn.addEventListener("click", function (ev) {
     var note = document.getElementById("note");
-    var ids = Object.keys(cart);
-    if (!ids.length) { note.textContent = "Add something first."; return; }
-    var text = ids.map(function (id) { return cart[id] + " x " + byId(id).name; }).join("\n") + "\nTotal: " + rupee(total());
-    var done = function () { note.textContent = "Copied. Show it at the counter or send it to us."; };
-    var fail = function () { note.textContent = text.replace(/\n/g, " | "); };
-    try { navigator.clipboard.writeText(text).then(done, fail); } catch (err) { fail(); }
+    if (!Object.keys(cart).length) {
+      ev.preventDefault();
+      note.textContent = "Add at least one item first.";
+      return;
+    }
+    updateOrder();
+    note.textContent = "Opening WhatsApp. Press send there to place your order.";
   });
 
   var cName = document.getElementById("cname");
@@ -340,9 +353,7 @@
   });
   document.getElementById("contact-form").addEventListener("submit", function (ev) { ev.preventDefault(); });
 
-  cart.b1 = 1; cart.x1 = 1;
   render();
-  document.getElementById("note").textContent = "Example order shown. Change it to yours.";
 </script>
 
 </body>
